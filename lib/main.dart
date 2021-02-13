@@ -1,4 +1,4 @@
-import 'package:chat_app/pages/login_page.dart';
+import 'package:chat_app/pages/chat_page.dart';
 import 'package:chat_app/routes/routes.dart';
 import 'package:flutter/material.dart';
 
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      initialRoute: LoginPage.ROUTE,
+      initialRoute: ChatPage.ROUTE,
       routes: appRoutes,
     );
   }
