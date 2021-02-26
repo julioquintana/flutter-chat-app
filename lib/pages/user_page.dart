@@ -1,6 +1,9 @@
 import 'package:chat_app/models/user.dart';
+import 'package:chat_app/pages/login_page.dart';
+import 'package:chat_app/providers/AuthProvider.dart';
 import 'package:chat_app/widget/list_title_item_chat.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class UserPage extends StatefulWidget {
@@ -30,16 +33,23 @@ class _UserPageState extends State<UserPage> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<AuthProvider>(context);
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
           title: Text(
-            'Mi Nombre',
+            provider.user.name,
             style: TextStyle(color: Colors.black54),
           ),
           leading: IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () {},
+            icon: Icon(
+              Icons.exit_to_app,
+              color: Colors.indigoAccent,
+            ),
+            onPressed: () {
+              AuthProvider.deleteToken();
+              Navigator.pushReplacementNamed(context, LoginPage.ROUTE);
+            },
           ),
           actions: [
             Container(

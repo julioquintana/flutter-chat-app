@@ -1,9 +1,13 @@
+import 'package:chat_app/helpers/show_alert.dart';
 import 'package:chat_app/pages/login_page.dart';
+import 'package:chat_app/pages/user_page.dart';
+import 'package:chat_app/providers/AuthProvider.dart';
 import 'package:chat_app/widget/button_blue.dart';
 import 'package:chat_app/widget/custom_input.dart';
 import 'package:chat_app/widget/label_login_widget.dart';
 import 'package:chat_app/widget/logo_login_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatelessWidget {
   static const String ROUTE = 'register';
@@ -55,6 +59,7 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 50),
       child: Column(
@@ -77,16 +82,29 @@ class __FormState extends State<_Form> {
             isPassword: true,
           ),
           ButtonBlue(
-            onTabFunction: process,
+            onTabFunction: authProvider.authenticating
+                ? null
+                : () async {
+                    FocusScope.of(context).unfocus();
+                    final isProcessed = await authProvider.register(
+                        nameController.text,
+                        emailController.text,
+                        passController.text);
+                    if (isProcessed) {
+                      Navigator.pushReplacementNamed(context, UserPage.ROUTE);
+                    } else {
+                      showAlert(
+                          context,
+                          'Error',
+                          authProvider.errorResponse.errors
+                              .map((e) => '${e.msg}')
+                              .join('\n'));
+                    }
+                  },
             texto: 'Ingrese',
           ),
         ],
       ),
     );
-  }
-
-  process() {
-    print(emailController.text);
-    print(passController.text);
   }
 }

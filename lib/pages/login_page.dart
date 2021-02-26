@@ -1,9 +1,13 @@
+import 'package:chat_app/helpers/show_alert.dart';
 import 'package:chat_app/pages/register_page.dart';
+import 'package:chat_app/pages/user_page.dart';
+import 'package:chat_app/providers/AuthProvider.dart';
 import 'package:chat_app/widget/button_blue.dart';
 import 'package:chat_app/widget/custom_input.dart';
 import 'package:chat_app/widget/label_login_widget.dart';
 import 'package:chat_app/widget/logo_login_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   static const String ROUTE = 'login';
@@ -54,6 +58,7 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 50),
       child: Column(
@@ -71,16 +76,23 @@ class __FormState extends State<_Form> {
             isPassword: true,
           ),
           ButtonBlue(
-            onTabFunction: process,
+            onTabFunction: authProvider.authenticating
+                ? null
+                : () async {
+                    FocusScope.of(context).unfocus();
+                    final isAuthenticated = await authProvider.login(
+                        emailController.text, passController.text);
+                    if (isAuthenticated) {
+                      Navigator.pushReplacementNamed(context, UserPage.ROUTE);
+                    } else {
+                      showAlert(context, 'Login Incorrecto',
+                          'Revise sus credenciales e intente  nuevamente');
+                    }
+                  },
             texto: 'Ingrese',
           ),
         ],
       ),
     );
-  }
-
-  process() {
-    print(emailController.text);
-    print(passController.text);
   }
 }
