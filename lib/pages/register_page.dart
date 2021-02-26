@@ -1,6 +1,6 @@
 import 'package:chat_app/helpers/show_alert.dart';
+import 'package:chat_app/pages/chat_list_page.dart';
 import 'package:chat_app/pages/login_page.dart';
-import 'package:chat_app/pages/user_page.dart';
 import 'package:chat_app/providers/AuthProvider.dart';
 import 'package:chat_app/widget/button_blue.dart';
 import 'package:chat_app/widget/custom_input.dart';
@@ -91,7 +91,8 @@ class __FormState extends State<_Form> {
                         emailController.text,
                         passController.text);
                     if (isProcessed) {
-                      Navigator.pushReplacementNamed(context, UserPage.ROUTE);
+                      Navigator.pushReplacementNamed(
+                          context, ChatListPage.ROUTE);
                     } else {
                       showAlert(
                           context,

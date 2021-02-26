@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
-class UserPage extends StatefulWidget {
+class ChatListPage extends StatefulWidget {
   static const String ROUTE = 'user';
 
   @override
-  _UserPageState createState() => _UserPageState();
+  _ChatListPageState createState() => _ChatListPageState();
 }
 
-class _UserPageState extends State<UserPage> {
+class _ChatListPageState extends State<ChatListPage> {
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
