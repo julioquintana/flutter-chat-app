@@ -48,6 +48,7 @@ class _ChatListPageState extends State<ChatListPage> {
             ),
             onPressed: () {
               AuthProvider.deleteToken();
+              provider.authenticating = false;
               Navigator.pushReplacementNamed(context, LoginPage.ROUTE);
             },
           ),
