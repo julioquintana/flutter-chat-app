@@ -1,8 +1,13 @@
 import 'dart:io';
 
+import 'package:chat_app/models/Message.dart';
+import 'package:chat_app/providers/AuthProvider.dart';
+import 'package:chat_app/providers/chat_provider.dart';
+import 'package:chat_app/providers/socket_provider.dart';
 import 'package:chat_app/widget/message_chat.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ChatPage extends StatefulWidget {
   static const String ROUTE = 'chat';
@@ -16,17 +21,64 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   final _textFocus = FocusNode();
   bool isEditingText = false;
   List<MessageChat> messages = [];
+  ChatProvider chatProvider;
+  SocketProvider socketProvider;
+  AuthProvider authProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    socketProvider = Provider.of<SocketProvider>(context, listen: false);
+    authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    this.socketProvider.socket.on('message-personal', _getMessages);
+    _loadLastMessages(this.chatProvider.userTarget.uid);
+  }
+
+  Future<void> _loadLastMessages(String uid) async {
+    List<Message> chatHistory = await this.chatProvider.getMessages(uid);
+
+    final messagesHistory = chatHistory.map((message) => MessageChat(
+        text: message.message,
+        uid: message.from,
+        animationContainer: AnimationController(
+            vsync: this, duration: Duration(milliseconds: 0))
+          ..forward()));
+
+    setState(() {
+      messages.insertAll(0, messagesHistory);
+    });
+  }
+
+  void _getMessages(dynamic data) {
+    if (data['from'] == chatProvider.userTarget.uid) {
+      MessageChat messageChat = MessageChat(
+        text: data['message'],
+        uid: data['from'],
+        animationContainer: AnimationController(
+            vsync: this, duration: Duration(milliseconds: 300)),
+      );
+      setState(() {
+        messages.insert(0, messageChat);
+      });
+      messageChat.animationContainer.forward();
+    }
+  }
 
   @override
   void dispose() {
     for (MessageChat messageChat in messages) {
       messageChat.animationContainer.dispose();
     }
+    this.socketProvider.socket.off('message-personal');
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final chatProvider = Provider.of<ChatProvider>(context);
+    final userTarget = chatProvider.userTarget;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -34,7 +86,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
           children: [
             CircleAvatar(
               child: Text(
-                'Ma',
+                userTarget?.name.substring(0, 2),
                 style: TextStyle(fontSize: 12),
               ),
               backgroundColor: Colors.blue[100],
@@ -42,7 +94,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
             ),
             SizedBox(height: 3),
             Text(
-              'Mayruma Crespo',
+              userTarget?.name,
               style: TextStyle(color: Colors.black87, fontSize: 12),
             )
           ],
@@ -125,15 +177,20 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
   _handleSubmit(String text) {
     if (text.trim().isNotEmpty) {
-      print(text);
       final newMessage = MessageChat(
-        uuid: '123',
+        uid: authProvider.user.uid,
         text: text,
         animationContainer: AnimationController(
             vsync: this, duration: Duration(milliseconds: 200)),
       );
       messages.insert(0, newMessage);
       newMessage.animationContainer.forward();
+
+      this.socketProvider.emit('message-personal', {
+        'to': this.chatProvider.userTarget.uid,
+        'from': this.authProvider.user.uid,
+        'message': text
+      });
 
       _textController.clear();
       _disableButton('');

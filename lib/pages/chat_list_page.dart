@@ -1,6 +1,8 @@
 import 'package:chat_app/models/user.dart';
 import 'package:chat_app/pages/login_page.dart';
 import 'package:chat_app/providers/AuthProvider.dart';
+import 'package:chat_app/providers/socket_provider.dart';
+import 'package:chat_app/services/usuarios_service.dart';
 import 'package:chat_app/widget/list_title_item_chat.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,26 +16,23 @@ class ChatListPage extends StatefulWidget {
 }
 
 class _ChatListPageState extends State<ChatListPage> {
+  final usersService = UsersService();
+  List<User> users = [];
+
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  final users = [
-    User(
-        name: 'Julio Quintana',
-        email: 'julio@julio.com',
-        online: true,
-        uid: '11'),
-    User(name: 'Jose Noguera', email: 'jose@jose.com', online: true, uid: '11'),
-    User(
-        name: 'Mary Quintana', email: 'mary@mary.com', online: true, uid: '11'),
-    User(
-        name: 'Mayruma Crespo', email: 'may@may.com', online: false, uid: '11'),
-    User(name: 'Carlos', email: 'carlos@carlos.com', online: true, uid: '11'),
-  ];
+  @override
+  void initState() {
+    _loadUser();
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AuthProvider>(context);
+    final socketProvider = Provider.of<SocketProvider>(context);
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -49,17 +48,25 @@ class _ChatListPageState extends State<ChatListPage> {
             onPressed: () {
               AuthProvider.deleteToken();
               provider.authenticating = false;
+              socketProvider.disconnect();
               Navigator.pushReplacementNamed(context, LoginPage.ROUTE);
             },
           ),
           actions: [
             Container(
               margin: EdgeInsets.only(right: 10),
-              child: Icon(
-                Icons.check_circle,
-                color: Colors.blue[400],
+              child: Visibility(
+                visible: socketProvider.serverStatus == ServerStatus.Online,
+                child: Icon(
+                  Icons.check_circle,
+                  color: Colors.blue[400],
+                ),
+                replacement: Icon(
+                  Icons.offline_bolt,
+                  color: Colors.red,
+                ),
               ),
-            )
+            ),
           ],
         ),
         body: SmartRefresher(
@@ -78,9 +85,9 @@ class _ChatListPageState extends State<ChatListPage> {
   }
 
   _loadUser() async {
-    // monitor network fetch
-    await Future.delayed(Duration(milliseconds: 1000));
-    // if failed,use refreshFailed()
+    users = await usersService.getUsers();
+
+    setState(() {});
     _refreshController.refreshCompleted();
   }
 
